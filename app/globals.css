@@ -169,3 +169,63 @@
     @apply bg-background text-foreground font-sans;
   }
 }
+
+/* Leaflet Overrides */
+.leaflet-container {
+  z-index: 10 !important;
+  font-family: var(--font-sans) !important;
+}
+
+.leaflet-container *:focus {
+  outline: none !important;
+}
+
+.leaflet-interactive:focus {
+  outline: none !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.leaflet-popup-tip {
+  background-color: var(--background) !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-right: 1px solid var(--border) !important;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Custom Premium Popup Styling (Shadcn-like Popover) */
+.custom-premium-popup .leaflet-popup-content-wrapper {
+  padding: 12px !important;
+}
+
+.custom-premium-popup .leaflet-popup-content {
+  margin: 0 !important;
+}
+
+.custom-premium-popup .leaflet-popup-close-button {
+  top: 8px !important;
+  right: 8px !important;
+  color: var(--muted-foreground) !important;
+  transition: color 0.2s !important;
+}
+
+.custom-premium-popup .leaflet-popup-close-button:hover {
+  color: var(--foreground) !important;
+}
+
+/* Custom Premium Map Tile Filters */
+.leaflet-tile-container {
+  filter: contrast(1.04) saturate(1.1);
+  transition: filter 0.3s ease;
+}
+
+.dark .leaflet-tile-container {
+  /* Futuristic, cool dark tone for dark mode tiles */
+  filter: brightness(0.8) contrast(1.15) saturate(0.8) hue-rotate(15deg);
+}
