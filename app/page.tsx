@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sidebar"
 import { LuSun, LuMoon } from "react-icons/lu"
 import { Button } from "@/components/ui/button"
+import { KazakhstanMap } from "@/components/map"
 
 export default function Home() {
   const [theme, setTheme] = React.useState<"light" | "dark">("light")
@@ -79,10 +80,8 @@ export default function Home() {
             )}
           </Button>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-6 bg-background">
-          <div className="min-h-[100vh] flex-1 rounded-xl border border-dashed border-border/60 p-8 flex items-center justify-center text-muted-foreground text-sm font-medium">
-            Select a section from the sidebar to begin
-          </div>
+        <div className="flex flex-1 flex-col bg-background">
+          <KazakhstanMap />
         </div>
       </SidebarInset>
     </SidebarProvider>
