@@ -25,15 +25,15 @@ import {
 // This is sample data.
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "Администратор",
+    email: "admin@edtech.kz",
     avatar: "/avatars/shadcn.jpg",
   },
   teams: [
     {
-      name: "Acme Inc",
+      name: "EdTech Safety",
       logo: <LuGalleryVerticalEnd />,
-      plan: "Enterprise",
+      plan: "Control Center",
     },
     {
       name: "Acme Corp.",
@@ -49,13 +49,13 @@ const data = {
   navMain: [
     {
       title: "Карта",
-      url: "#",
+      url: "/",
       icon: <LuMap />,
       isActive: true,
       items: [
         {
           title: "Аналитика",
-          url: "#",
+          url: "/monitoring/analytics",
         },
         {
           title: "Служебный каталог",
@@ -70,26 +70,26 @@ const data = {
       items: [
         {
           title: "Аналитика",
-          url: "#",
+          url: "/monitoring/analytics",
         },
         {
           title: "Отчет",
-          url: "#",
+          url: "/monitoring/reports",
         },
         {
           title: "Тревоги",
-          url: "#",
+          url: "/monitoring/alarms",
         },
       ],
     },
     {
       title: "Камеры",
-      url: "#",
+      url: "/cameras",
       icon: <LuVideo />,
     },
     {
       title: "Экраны",
-      url: "#",
+      url: "/screens",
       icon: <LuTv />,
     },
   ],

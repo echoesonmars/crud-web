@@ -12,16 +12,37 @@ import "leaflet-defaulticon-compatibility";
 const KAZAKHSTAN_CENTER: [number, number] = [48.0196, 66.9237];
 const ZOOM_LEVEL = 5;
 
-const CITIES = [
-  { name: "Астана", coordinates: [51.1694, 71.4491] },
-  { name: "Алматы", coordinates: [43.2220, 76.8512] },
-  { name: "Шымкент", coordinates: [42.3417, 69.5901] },
-  { name: "Караганда", coordinates: [49.8019, 73.1021] },
-  { name: "Актобе", coordinates: [50.2839, 57.1670] },
-  { name: "Павлодар", coordinates: [52.2833, 76.9667] },
-  { name: "Атырау", coordinates: [47.1167, 51.8833] },
-  { name: "Усть-Каменогорск", coordinates: [49.9483, 82.6278] },
-];
+interface MapPoint {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  status: string;
+  connections: number;
+  latency: number;
+  loadPercent: number;
+}
+
+const getStatusLabelAndClass = (status: string) => {
+  switch (status) {
+    case "stable":
+      return {
+        label: "Стабильно",
+        className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+      };
+    case "warning":
+      return {
+        label: "Предупреждение",
+        className: "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+      };
+    case "critical":
+    default:
+      return {
+        label: "Критично",
+        className: "bg-red-500/10 text-red-600 dark:text-red-400"
+      };
+  }
+};
 
 const customMarkerIcon = () => {
   return L.divIcon({
@@ -42,6 +63,7 @@ const customMarkerIcon = () => {
 export default function LeafletMap() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
+  const [cities, setCities] = useState<MapPoint[]>([]);
 
   useEffect(() => {
     // Determine theme from document class
@@ -64,6 +86,15 @@ export default function LeafletMap() {
       .then(res => res.json())
       .then(data => setGeoData(data))
       .catch(err => console.error("Error loading GeoJSON", err));
+
+    fetch('/api/map-points')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCities(data);
+        }
+      })
+      .catch(err => console.error("Error loading map points", err));
 
     return () => observer.disconnect();
   }, []);
@@ -131,43 +162,46 @@ export default function LeafletMap() {
           />
         )}
         
-        {CITIES.map((city, index) => (
-          <Marker 
-            key={city.name} 
-            position={city.coordinates as [number, number]}
-            icon={customMarkerIcon()}
-          >
-            <Popup className="custom-premium-popup font-sans">
-              <div className="p-1 min-w-[180px]">
-                <div className="flex items-center justify-between gap-4 mb-2">
-                  <h4 className="font-semibold text-sm text-foreground">{city.name}</h4>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                    Стабильно
-                  </span>
+        {cities.map((city) => {
+          const statusInfo = getStatusLabelAndClass(city.status);
+          return (
+            <Marker 
+              key={city.id} 
+              position={[city.latitude, city.longitude] as [number, number]}
+              icon={customMarkerIcon()}
+            >
+              <Popup className="custom-premium-popup font-sans">
+                <div className="p-1 min-w-[180px]">
+                  <div className="flex items-center justify-between gap-4 mb-2">
+                    <h4 className="font-semibold text-sm text-foreground">{city.name}</h4>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusInfo.className}`}>
+                      {statusInfo.label}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-1.5 text-[11px] text-muted-foreground border-t pt-2 border-border/60">
+                    <div className="flex justify-between">
+                      <span>Подключения:</span>
+                      <span className="font-medium text-foreground">{city.connections} ед.</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Задержка:</span>
+                      <span className="font-medium text-foreground">{city.latency} мс</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Нагрузка:</span>
+                      <span className="font-medium text-foreground">{city.loadPercent}%</span>
+                    </div>
+                  </div>
+                  
+                  <button className="mt-3 w-full inline-flex items-center justify-center rounded-md text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-7 px-3 transition-colors cursor-pointer">
+                    Панель аналитики
+                  </button>
                 </div>
-                
-                <div className="space-y-1.5 text-[11px] text-muted-foreground border-t pt-2 border-border/60">
-                  <div className="flex justify-between">
-                    <span>Подключения:</span>
-                    <span className="font-medium text-foreground">{(index + 2) * 4} ед.</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Задержка:</span>
-                    <span className="font-medium text-foreground">{15 + index * 3} мс</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Нагрузка:</span>
-                    <span className="font-medium text-foreground">{45 + (index * 7) % 30}%</span>
-                  </div>
-                </div>
-                
-                <button className="mt-3 w-full inline-flex items-center justify-center rounded-md text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-7 px-3 transition-colors cursor-pointer">
-                  Панель аналитики
-                </button>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
     </div>
   );
