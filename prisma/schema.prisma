@@ -1,0 +1,55 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model MapPoint {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  latitude    Float
+  longitude   Float
+  status      String   // e.g., "stable", "warning", "critical"
+  connections Int
+  latency     Int      // in milliseconds
+  loadPercent Int      // load in percent (0-100)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+}
+
+model Camera {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  info      String
+  streamUrl String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  screens   Screen[]
+}
+
+model Screen {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  cameras   Camera[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AlarmEvent {
+  id         String   @id @default(uuid())
+  type       String   // e.g., "Бегущий человек", "Вандализм"
+  cameraName String
+  timestamp  DateTime
+  details    String
+}
