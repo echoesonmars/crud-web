@@ -31,7 +31,7 @@ const data = {
   },
   teams: [
     {
-      name: "EdTech Safety",
+      name: "Alatau Vision",
       logo: <LuGalleryVerticalEnd />,
       plan: "Control Center",
     },

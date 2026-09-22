@@ -87,7 +87,7 @@ export function DashboardLayout({
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink href="/" className="text-muted-foreground hover:text-foreground">
-                    EdTech Platform
+                    Alatau Vision
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 

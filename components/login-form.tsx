@@ -60,9 +60,9 @@ export function LoginForm({
           <form onSubmit={handleSubmit} className="p-8 flex flex-col justify-center gap-6">
             <FieldGroup>
               <div className="flex flex-col gap-1">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">Панель управления</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Alatau Vision</h1>
                 <p className="text-sm text-muted-foreground">
-                  Войдите в систему для доступа к дашборду
+                  Войдите в систему для доступа к панели управления
                 </p>
               </div>
 
@@ -126,7 +126,7 @@ export function LoginForm({
           <div className="relative hidden bg-muted md:block overflow-hidden border-l border-border/80">
             <Image
               src="/login_bg_pattern.png"
-              alt="Surveillance Control Center"
+              alt="Alatau Vision"
               fill
               className="object-cover dark:brightness-[0.7] transition-all duration-300"
             />

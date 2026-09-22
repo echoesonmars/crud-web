@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EdTech Dashboard",
-  description: "Advanced management dashboard",
+  title: "Alatau Vision",
+  description: "Alatau Vision control center",
 };
 
 export default function RootLayout({

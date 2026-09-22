@@ -1,6 +1,6 @@
 # design Guidelines & Styling System (`styles.md`)
 
-This document defines the central design system and styling principles for the **EdTech** application. All components and layouts must strictly adhere to these rules.
+This document defines the central design system and styling principles for the **Alatau Vision** application. All components and layouts must strictly adhere to these rules.
 
 ---
 

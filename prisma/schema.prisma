@@ -53,3 +53,13 @@ model AlarmEvent {
   timestamp  DateTime
   details    String
 }
+
+model FeedingEvent {
+  id              String   @id @default(uuid())
+  cowId           String
+  cameraId        String
+  durationSeconds Int?
+  confidenceScore Float?
+  cropImageUrl    String?
+  timestamp       DateTime @default(now())
+}

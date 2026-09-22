@@ -129,9 +129,9 @@ export default function LeafletMap() {
     });
   };
 
-  const tileUrl = theme === "dark" 
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+  const tileUrl = theme === "dark"
+    ? "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+    : "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
 
   return (
     <div className="w-full h-full relative z-0" style={{ minHeight: "calc(100vh - 64px)" }}>
@@ -140,12 +140,12 @@ export default function LeafletMap() {
         zoom={ZOOM_LEVEL}
         minZoom={4}
         maxZoom={12}
-        attributionControl={false} // Disable watermark!
-        zoomControl={false} // Disable default zoom to position it elsewhere if needed
+        attributionControl={false}
+        zoomControl={false}
         className="w-full h-full"
         style={{ width: "100%", height: "100%", background: theme === "dark" ? "#0f0f0f" : "#f8f9fa" }}
       >
-        <TileLayer url={tileUrl} />
+        <TileLayer key={theme} url={tileUrl} maxZoom={16} />
         <ZoomControl position="topright" />
         
         {geoData && (
