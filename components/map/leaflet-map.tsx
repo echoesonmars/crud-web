@@ -1,27 +1,24 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl, GeoJSON } from "react-leaflet";
 import L from "leaflet";
-import type { Layer, LeafletMouseEvent, Path } from "leaflet";
-import type { FeatureCollection, Feature } from "geojson";
+import type { LatLngBoundsExpression } from "leaflet";
+import type { FeatureCollection, Feature, Polygon, MultiPolygon, Position } from "geojson";
 import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import "leaflet-defaulticon-compatibility";
+import { PLACEHOLDER_CAMERAS } from "./placeholder-cameras";
 
-const KAZAKHSTAN_CENTER: [number, number] = [48.0196, 66.9237];
-const ZOOM_LEVEL = 5;
-
-interface MapPoint {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  status: string;
-  connections: number;
-  latency: number;
-  loadPercent: number;
-}
+// Аль-Фарабийский район г. Шымкента (граница из OpenStreetMap, relation 5550509)
+const DISTRICT_BOUNDS: LatLngBoundsExpression = [
+  [42.1090, 69.4836],
+  [42.3480, 69.6521],
+];
+const MAX_BOUNDS: LatLngBoundsExpression = [
+  [42.05, 69.38],
+  [42.41, 69.76],
+];
 
 const getStatusLabelAndClass = (status: string) => {
   switch (status) {
@@ -48,7 +45,6 @@ const customMarkerIcon = () => {
   return L.divIcon({
     html: `
       <div class="relative flex items-center justify-center">
-        <!-- Static border and core dot -->
         <div class="relative flex h-4 w-4 items-center justify-center rounded-full bg-background border-2 border-primary shadow-md transition-transform duration-200 hover:scale-125">
           <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
         </div>
@@ -60,10 +56,25 @@ const customMarkerIcon = () => {
   });
 };
 
+// Полигон «весь мир с дыркой в форме района» — затемняет всё вокруг района
+const buildOutsideMask = (district: FeatureCollection): Feature<Polygon> | null => {
+  const geometry = district.features[0]?.geometry as Polygon | MultiPolygon | undefined;
+  if (!geometry) return null;
+  const holes: Position[][] =
+    geometry.type === "Polygon"
+      ? [geometry.coordinates[0]]
+      : geometry.coordinates.map((polygon) => polygon[0]);
+  const world: Position[] = [[-180, -90], [180, -90], [180, 90], [-180, 90], [-180, -90]];
+  return {
+    type: "Feature",
+    properties: {},
+    geometry: { type: "Polygon", coordinates: [world, ...holes] },
+  };
+};
+
 export default function LeafletMap() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [geoData, setGeoData] = useState<FeatureCollection | null>(null);
-  const [cities, setCities] = useState<MapPoint[]>([]);
+  const [district, setDistrict] = useState<FeatureCollection | null>(null);
 
   useEffect(() => {
     // Determine theme from document class
@@ -77,126 +88,103 @@ export default function LeafletMap() {
     });
 
     observer.observe(document.documentElement, { attributes: true });
-    
+
     // Initial check
     const isDark = document.documentElement.classList.contains("dark");
     setTheme(isDark ? "dark" : "light");
 
-    fetch('/data/kazakhstan-regions.geojson')
+    fetch('/data/al-farabi.geojson')
       .then(res => res.json())
-      .then(data => setGeoData(data))
-      .catch(err => console.error("Error loading GeoJSON", err));
-
-    fetch('/api/map-points')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setCities(data);
-        }
-      })
-      .catch(err => console.error("Error loading map points", err));
+      .then(data => setDistrict(data))
+      .catch(err => console.error("Error loading district GeoJSON", err));
 
     return () => observer.disconnect();
   }, []);
 
-  const onEachFeature = (feature: Feature, layer: Layer) => {
-    layer.on({
-      mouseover: (e: LeafletMouseEvent) => {
-        const target = e.target as Path;
-        target.setStyle({
-          fillColor: theme === "dark" ? "#10b981" : "#16a34a",
-          fillOpacity: 0.2,
-          weight: 2,
-          color: theme === "dark" ? "#34d399" : "#15803d"
-        });
-        target.bringToFront();
-      },
-      mouseout: (e: LeafletMouseEvent) => {
-        const target = e.target as Path;
-        target.setStyle({
-          fillColor: theme === "dark" ? "#10b981" : "#16a34a",
-          fillOpacity: 0.05,
-          weight: 1.5,
-          color: theme === "dark" ? "rgba(16,185,129,0.4)" : "rgba(22,163,74,0.4)"
-        });
-      },
-    });
+  const outsideMask = useMemo(() => (district ? buildOutsideMask(district) : null), [district]);
 
-    const regionName = feature.properties?.NAME_1 || feature.properties?.name || "Регион";
-    layer.bindTooltip(regionName, {
-      sticky: true,
-      className: "font-sans font-medium rounded-md shadow-sm border border-border"
-    });
-  };
+  const accent = theme === "dark" ? "#34d399" : "#15803d";
 
   const tileUrl = theme === "dark"
     ? "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
-    : "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}";
+    : "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}";
 
   return (
     <div className="w-full h-full relative z-0" style={{ minHeight: "calc(100vh - 64px)" }}>
+      <div className="absolute left-4 top-4 z-[1000] rounded-md border border-border bg-background/90 px-3 py-2 shadow-sm backdrop-blur">
+        <div className="text-sm font-semibold text-foreground">Аль-Фарабийский район</div>
+        <div className="text-xs text-muted-foreground">г. Шымкент</div>
+      </div>
+
       <MapContainer
-        center={KAZAKHSTAN_CENTER}
-        zoom={ZOOM_LEVEL}
-        minZoom={4}
-        maxZoom={12}
+        bounds={DISTRICT_BOUNDS}
+        maxBounds={MAX_BOUNDS}
+        maxBoundsViscosity={1}
+        zoomSnap={0.25}
+        minZoom={11}
+        maxZoom={18}
         attributionControl={false}
         zoomControl={false}
         className="w-full h-full"
         style={{ width: "100%", height: "100%", background: theme === "dark" ? "#0f0f0f" : "#f8f9fa" }}
       >
-        <TileLayer key={theme} url={tileUrl} maxZoom={16} />
-        <ZoomControl position="topright" />
-        
-        {geoData && (
-          <GeoJSON 
-            key={theme} // Force re-render when theme changes to update base border color
-            data={geoData} 
-            style={{
-              fillColor: theme === "dark" ? "#10b981" : "#16a34a",
-              fillOpacity: 0.05,
-              weight: 1.5,
-              color: theme === "dark" ? "rgba(16,185,129,0.4)" : "rgba(22,163,74,0.4)"
-            }}
-            onEachFeature={onEachFeature} 
+        <TileLayer key={theme} url={tileUrl} maxZoom={18} />
+        {theme === "dark" && (
+          <TileLayer
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
+            maxZoom={18}
           />
         )}
-        
-        {cities.map((city) => {
-          const statusInfo = getStatusLabelAndClass(city.status);
+        <ZoomControl position="topright" />
+
+        {outsideMask && (
+          <GeoJSON
+            key={`mask-${theme}`}
+            data={outsideMask}
+            interactive={false}
+            style={{
+              stroke: false,
+              fillColor: theme === "dark" ? "#000000" : "#1f2937",
+              fillOpacity: theme === "dark" ? 0.6 : 0.35,
+            }}
+          />
+        )}
+
+        {district && (
+          <GeoJSON
+            key={`district-${theme}`}
+            data={district}
+            interactive={false}
+            style={{ fill: false, weight: 3, color: accent }}
+          />
+        )}
+
+        {PLACEHOLDER_CAMERAS.map((camera) => {
+          const statusInfo = getStatusLabelAndClass(camera.status);
           return (
-            <Marker 
-              key={city.id} 
-              position={[city.latitude, city.longitude] as [number, number]}
+            <Marker
+              key={camera.id}
+              position={[camera.latitude, camera.longitude]}
               icon={customMarkerIcon()}
             >
               <Popup className="custom-premium-popup font-sans">
                 <div className="p-1 min-w-[180px]">
                   <div className="flex items-center justify-between gap-4 mb-2">
-                    <h4 className="font-semibold text-sm text-foreground">{city.name}</h4>
+                    <h4 className="font-semibold text-sm text-foreground">{camera.name}</h4>
                     <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusInfo.className}`}>
                       {statusInfo.label}
                     </span>
                   </div>
-                  
+
                   <div className="space-y-1.5 text-[11px] text-muted-foreground border-t pt-2 border-border/60">
                     <div className="flex justify-between">
-                      <span>Подключения:</span>
-                      <span className="font-medium text-foreground">{city.connections} ед.</span>
+                      <span>Координаты:</span>
+                      <span className="font-medium text-foreground">
+                        {camera.latitude.toFixed(4)}, {camera.longitude.toFixed(4)}
+                      </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Задержка:</span>
-                      <span className="font-medium text-foreground">{city.latency} мс</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Нагрузка:</span>
-                      <span className="font-medium text-foreground">{city.loadPercent}%</span>
-                    </div>
+                    <div>Заглушка — реальная камера ещё не привязана</div>
                   </div>
-                  
-                  <button className="mt-3 w-full inline-flex items-center justify-center rounded-md text-[11px] font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-7 px-3 transition-colors cursor-pointer">
-                    Панель аналитики
-                  </button>
                 </div>
               </Popup>
             </Marker>
