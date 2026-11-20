@@ -15,6 +15,7 @@ interface IncidentDetail {
   cameraName: string
   timestamp: string
   details: string
+  snapshotUrl: string | null
   severity: string
   status: string
   forwardedTo: string | null
@@ -154,6 +155,13 @@ export function IncidentDialog({
             </div>
 
             <p className="text-xs text-muted-foreground leading-relaxed border-t border-border/40 pt-4">{data.details}</p>
+
+            {data.snapshotUrl && (
+              <a href={data.snapshotUrl} target="_blank" rel="noreferrer" className="block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={data.snapshotUrl} alt={`Кадр: ${data.type}`} className="w-full rounded-xl border border-border/40" />
+              </a>
+            )}
 
             {data.camera?.streamUrl && !data.camera.streamUrl.startsWith("demo://") && (
               showVideo ? (
