@@ -12,11 +12,12 @@ import {
   NativeSelect,
   DISTRICT_OPTIONS,
   PERIOD_OPTIONS,
+  DEFAULT_PERIOD,
   formatDateTime,
   formatAgo,
 } from "@/components/shared/filters"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { SEVERITY_META, SLA_MINUTES, STATUS_META, type Sector, type Severity } from "@/lib/sectors"
+import { SEVERITY_META, SLA_MINUTES, STATUS_META, districtLabel, type Sector, type Severity } from "@/lib/sectors"
 import { AlertCircle, AlertTriangle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -50,7 +51,8 @@ export default function IncidentsPage() {
   const [district, setDistrict] = useState("all")
   const [status, setStatus] = useState("open")
   const [severity, setSeverity] = useState("all")
-  const [days, setDays] = useState("7")
+  const [days, setDays] = useState(DEFAULT_PERIOD)
+  const [date, setDate] = useState("")
   const [query, setQuery] = useState("")
   const [items, setItems] = useState<Incident[]>([])
   const [total, setTotal] = useState(0)
@@ -69,6 +71,8 @@ export default function IncidentsPage() {
     if (st) setStatus(st)
     const d = sp.get("days")
     if (d) setDays(d)
+    const dt = sp.get("date")
+    if (dt) setDate(dt)
     const fid = sp.get("facilityId")
     if (fid) setFacility({ id: fid, name: "" })
   }, [])
@@ -78,6 +82,7 @@ export default function IncidentsPage() {
     try {
       const p = new URLSearchParams({ sector, district, status, severity, days, limit: "300" })
       if (query) p.set("query", query)
+      if (date) p.set("date", date)
       if (facility) p.set("facilityId", facility.id)
       const r = await fetch(`/api/incidents?${p}`)
       if (!r.ok) throw new Error()
@@ -92,7 +97,7 @@ export default function IncidentsPage() {
     } finally {
       setLoading(false)
     }
-  }, [sector, district, status, severity, days, query, facility])
+  }, [sector, district, status, severity, days, date, query, facility])
 
   useEffect(() => {
     const t = setTimeout(load, query ? 300 : 0)
@@ -128,7 +133,7 @@ export default function IncidentsPage() {
 
         <SectorTabs value={sector} onChange={setSector} />
 
-        <div className="bg-card border border-border p-4 rounded-2xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 shadow-sm">
+        <div className="bg-card border border-border p-4 rounded-2xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 shadow-sm">
           <div className="flex flex-col gap-1.5 lg:col-span-1">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Поиск</span>
             <SearchInput value={query} onChange={setQuery} placeholder="Объект, адрес, камера..." />
@@ -136,7 +141,23 @@ export default function IncidentsPage() {
           <NativeSelect label="Район" value={district} onChange={setDistrict} options={DISTRICT_OPTIONS} />
           <NativeSelect label="Статус" value={status} onChange={setStatus} options={STATUS_OPTIONS} />
           <NativeSelect label="Критичность" value={severity} onChange={setSeverity} options={SEVERITY_OPTIONS} />
-          <NativeSelect label="Период" value={days} onChange={setDays} options={PERIOD_OPTIONS} />
+          <NativeSelect label="Период" value={days} onChange={setDays} options={PERIOD_OPTIONS} className={date ? "opacity-50" : ""} />
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Дата</span>
+            <div className="flex gap-1">
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="h-9 w-full rounded-lg border border-border bg-card px-3 text-sm text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              {date && (
+                <button type="button" onClick={() => setDate("")} className="px-2 text-xs text-primary hover:underline cursor-pointer" aria-label="Сбросить дату">
+                  ✕
+                </button>
+              )}
+            </div>
+          </label>
         </div>
 
         {facility && (
@@ -197,7 +218,7 @@ export default function IncidentsPage() {
                         <div className="font-medium text-foreground">{i.facility?.name ?? "—"}</div>
                         {i.facility && <SectorLabel sector={i.facility.sector} />}
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{i.facility?.district ?? "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{i.facility ? districtLabel(i.facility.district) : "—"}</TableCell>
                       <TableCell className="text-xs">
                         <div className="flex flex-col gap-1 items-start">
                           <IncidentStatusBadge status={i.status} />

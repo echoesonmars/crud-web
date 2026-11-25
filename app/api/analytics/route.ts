@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   try {
     const session = await getSession(request)
     const sp = new URL(request.url).searchParams
-    const days = Math.min(Math.max(Number(sp.get("days")) || 7, 1), 90)
+    const days = Math.min(Math.max(Number(sp.get("days")) || 90, 1), 365)
     sp.set("days", String(days))
 
     const events = await db.alarmEvent.findMany({

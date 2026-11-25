@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { SectorTabs, NativeSelect, DISTRICT_OPTIONS, PERIOD_OPTIONS, SectorDot } from "@/components/shared/filters"
+import { SectorTabs, NativeSelect, DISTRICT_OPTIONS, PERIOD_OPTIONS, DEFAULT_PERIOD, SectorDot } from "@/components/shared/filters"
 import { ChartTooltipProvider, ChartCard, HBarList, DailyStacked, WeekHourHeatmap } from "@/components/analytics/charts"
-import { SECTOR_META, type Sector } from "@/lib/sectors"
+import { SECTOR_META, districtLabel, districtShort, type Sector } from "@/lib/sectors"
 import { Activity, ShieldAlert, Clock, AlertTriangle, Timer, Ban, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -35,7 +35,7 @@ interface Analytics {
 export default function AnalyticsPage() {
   const [sector, setSector] = useState<Sector | "all">("all")
   const [district, setDistrict] = useState("all")
-  const [days, setDays] = useState("7")
+  const [days, setDays] = useState(DEFAULT_PERIOD)
   const [data, setData] = useState<Analytics | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -174,7 +174,7 @@ export default function AnalyticsPage() {
                 <HBarList
                   rows={data.byDistrict.map((d) => ({
                     key: d.district,
-                    label: `${d.district} район`,
+                    label: districtLabel(d.district),
                     value: d.total,
                     extra: `Критичных: ${d.critical} · открытых: ${d.open}`,
                   }))}
@@ -196,7 +196,7 @@ export default function AnalyticsPage() {
                       <SectorDot sector={f.sector} />
                       <span className="flex-1 min-w-0">
                         <span className="block truncate text-foreground">{f.name}</span>
-                        <span className="text-[10px] text-muted-foreground">{f.district} р-н · критичных {f.critical}</span>
+                        <span className="text-[10px] text-muted-foreground">{districtShort(f.district)} · критичных {f.critical}</span>
                       </span>
                       <span className="font-mono text-foreground">{f.total}</span>
                     </li>
