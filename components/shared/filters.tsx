@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { SECTORS, SECTOR_META, DISTRICTS, STATUS_META, type Sector, type IncidentStatus } from "@/lib/sectors"
+import { SECTORS, SECTOR_META, DISTRICTS, STATUS_META, districtLabel, type Sector, type IncidentStatus } from "@/lib/sectors"
 import { cn } from "@/lib/utils"
 
 // Вкладки секторов: Все / Школы / Детсады / Медицина / ДП / Город
@@ -97,14 +97,18 @@ export function NativeSelect({
   )
 }
 
-export const DISTRICT_OPTIONS = [{ value: "all", label: "Все районы" }, ...DISTRICTS.map((d) => ({ value: d, label: `${d} район` }))]
+export const DISTRICT_OPTIONS = [{ value: "all", label: "Все районы" }, ...DISTRICTS.map((d) => ({ value: d, label: districtLabel(d) }))]
 
 export const PERIOD_OPTIONS = [
   { value: "1", label: "Сутки" },
   { value: "7", label: "7 дней" },
   { value: "30", label: "30 дней" },
   { value: "90", label: "90 дней" },
+  { value: "365", label: "Год" },
 ]
+
+// Период по умолчанию на страницах журнала и аналитики
+export const DEFAULT_PERIOD = "90"
 
 export function formatDateTime(v: string | Date) {
   return new Date(v).toLocaleString("ru-RU", {

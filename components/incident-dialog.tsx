@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { StreamViewer } from "@/components/shared/stream-viewer"
 import { StatusBadge } from "@/components/shared/status-badge"
 import { IncidentStatusBadge, SectorLabel, formatDateTime } from "@/components/shared/filters"
-import { FORWARD_TARGETS, SEVERITY_META, SLA_MINUTES, STATUS_META, type Severity, type IncidentStatus } from "@/lib/sectors"
+import { FORWARD_TARGETS, SEVERITY_META, SLA_MINUTES, STATUS_META, districtShort, type Severity, type IncidentStatus } from "@/lib/sectors"
 import { Clock, MapPin, Phone, Send, CheckCircle2, XCircle, Eye, AlertTriangle } from "lucide-react"
 
 interface IncidentDetail {
@@ -131,7 +131,7 @@ export function IncidentDialog({
                     <div className="font-semibold text-sm text-foreground">{data.facility.name}</div>
                     <SectorLabel sector={data.facility.sector} />
                     <div className="flex items-start gap-2 text-muted-foreground">
-                      <MapPin className="size-3.5 mt-0.5 shrink-0" /> {data.facility.district} р-н, {data.facility.address}
+                      <MapPin className="size-3.5 mt-0.5 shrink-0" /> {districtShort(data.facility.district)}, {data.facility.address}
                     </div>
                   </>
                 ) : (

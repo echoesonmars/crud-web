@@ -9,7 +9,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import "leaflet-defaulticon-compatibility";
 import { PLACEHOLDER_CAMERAS } from "./placeholder-cameras";
-import { SECTORS, SECTOR_META, type Sector } from "@/lib/sectors";
+import { SECTORS, SECTOR_META, districtLabel, districtShort, type Sector } from "@/lib/sectors";
 
 interface MapFacility {
   id: string;
@@ -50,7 +50,16 @@ const DISTRICT_AREAS = [
   { key: "enbekshi", district: "Енбекшинский", label: "Енбекшинский" },
   { key: "karatau", district: "Каратауский", label: "Каратауский" },
   { key: "turan", district: "Туранский", label: "Туран" },
+  // Вне Шымкента: школа QOZ Vision. Границ в GeoJSON нет — рамка задана вручную
+  { key: "zhezkazgan", district: "Жезказган", label: "Жезказган" },
 ] as const;
+
+const EXTRA_AREA_BOUNDS: Partial<Record<DistrictKey, { bounds: LatLngBoundsExpression; maxBounds: LatLngBoundsExpression }>> = {
+  zhezkazgan: {
+    bounds: [[47.765, 67.66], [47.84, 67.78]],
+    maxBounds: [[47.70, 67.55], [47.90, 67.90]],
+  },
+};
 
 type DistrictKey = (typeof DISTRICT_AREAS)[number]["key"];
 type AreaKey = "city" | DistrictKey;
@@ -240,6 +249,8 @@ export default function LeafletMap() {
   const outsideMask = useMemo(() => (boundary ? buildOutsideMask(boundary) : null), [boundary]);
 
   const { bounds, maxBounds } = useMemo(() => {
+    const extra = areaKey !== "city" ? EXTRA_AREA_BOUNDS[areaKey] : undefined;
+    if (extra) return extra;
     const bbox = selectedFeature?.bbox as number[] | undefined;
     if (areaKey === "city" || !bbox) return { bounds: CITY_BOUNDS, maxBounds: CITY_MAX_BOUNDS };
     return { bounds: bboxToBounds(bbox), maxBounds: bboxToBounds(bbox, 0.08) };
@@ -276,7 +287,7 @@ export default function LeafletMap() {
     };
   }, [districts, areaKey]);
 
-  const areaTitle = selected ? `${selected.district} район` : "г. Шымкент";
+  const areaTitle = selected ? districtLabel(selected.district) : "г. Шымкент";
   const areaSubtitle = selected
     ? `${districtFacilities.length} объектов · ${districtFacilities.reduce((a, f) => a + f.openIncidents, 0)} открытых инцидентов`
     : "Все районы — нажмите на район на карте";
@@ -417,7 +428,7 @@ export default function LeafletMap() {
                     {SECTOR_META[f.sector].label}
                   </span>
                 </div>
-                <div className="text-[11px] text-muted-foreground mb-2">{f.district} р-н, {f.address}</div>
+                <div className="text-[11px] text-muted-foreground mb-2">{districtShort(f.district)}, {f.address}</div>
                 <div className="space-y-1 text-[11px] border-t pt-2 border-border/60">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Камеры онлайн:</span>
@@ -430,7 +441,7 @@ export default function LeafletMap() {
                 </div>
                 <div className="flex gap-3 mt-2 text-[11px]">
                   <a href={`/objects?sector=${f.sector}&query=${encodeURIComponent(f.name)}`} className="text-primary hover:underline">Камеры объекта</a>
-                  <a href={`/incidents?facilityId=${f.id}&status=all&days=30`} className="text-primary hover:underline">Инциденты</a>
+                  <a href={`/incidents?facilityId=${f.id}&status=all&days=365`} className="text-primary hover:underline">Инциденты</a>
                 </div>
               </div>
             </Popup>

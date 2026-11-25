@@ -55,7 +55,21 @@ export const DISTRICTS = [
   "Енбекшинский",
   "Каратауский",
   "Туранский",
+  // Не район Шымкента: школа в Жезказгане, инциденты идут из QOZ Vision
+  "Жезказган",
 ] as const
+
+const CITY_DISTRICTS = new Set(["Жезказган"])
+
+// «Абайский район» / «г. Жезказган»
+export function districtLabel(d: string): string {
+  return CITY_DISTRICTS.has(d) ? `г. ${d}` : `${d} район`
+}
+
+// «Абайский р-н» / «г. Жезказган»
+export function districtShort(d: string): string {
+  return CITY_DISTRICTS.has(d) ? `г. ${d}` : `${d} р-н`
+}
 
 // ---- Критичность ----
 

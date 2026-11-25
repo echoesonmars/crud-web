@@ -72,13 +72,14 @@ export function incidentWhere(session: SessionPayload | null, sp: URLSearchParam
   if (from && !isNaN(Date.parse(from))) ts.gte = new Date(from)
   if (to && !isNaN(Date.parse(to))) ts.lte = new Date(to)
   if (date && !isNaN(Date.parse(date))) {
-    const d = new Date(date)
-    const start = new Date(d)
-    start.setHours(0, 0, 0, 0)
-    const end = new Date(d)
-    end.setHours(23, 59, 59, 999)
+    // Сутки по времени Алматы (UTC+5). date — «2026-11-20» или ISO-момент (из календаря)
+    const TZ_MS = 5 * 3600_000
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(date)
+      ? date
+      : new Date(new Date(date).getTime() + TZ_MS).toISOString().slice(0, 10)
+    const start = new Date(`${day}T00:00:00+05:00`)
     ts.gte = start
-    ts.lte = end
+    ts.lte = new Date(start.getTime() + 86400_000 - 1)
   }
   if (!ts.gte && days > 0) ts.gte = new Date(Date.now() - days * 86400_000)
   if (ts.gte || ts.lte) and.push({ timestamp: ts })
