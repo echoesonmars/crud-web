@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 
 interface Analytics {
   days: number
+  step?: number
   totals: {
     total: number
     critical: number
@@ -146,7 +147,7 @@ export default function AnalyticsPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-            <ChartCard title="Динамика по дням" subtitle="Количество событий по критичности" className="lg:col-span-3">
+            <ChartCard title={data?.step === 7 ? "Динамика по неделям" : "Динамика по дням"} subtitle="Количество событий по критичности" className="lg:col-span-3">
               {data && <DailyStacked days={data.byDay} />}
             </ChartCard>
             <ChartCard title="По секторам" subtitle="Где происходят события" className="lg:col-span-2">

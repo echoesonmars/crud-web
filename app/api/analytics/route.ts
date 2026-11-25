@@ -42,11 +42,13 @@ export async function GET(request: Request) {
     const heat: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0))
 
     // Дни периода — сутки по времени Алматы (UTC+5)
+    // Для длинного периода — по неделям, иначе столбики не помещаются; ключ — первый день корзины
+    const step = days > 90 ? 7 : 1
+    const todayIdx = Math.floor((now + TZ_MS) / 86400_000)
+    const nBuckets = Math.ceil(days / step)
+    const bucketKey = (b: number) => new Date((todayIdx - b * step - (step - 1)) * 86400_000).toISOString().slice(0, 10)
     const dayKeys: string[] = []
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(now + TZ_MS - i * 86400_000)
-      dayKeys.push(d.toISOString().slice(0, 10))
-    }
+    for (let b = nBuckets - 1; b >= 0; b--) dayKeys.push(bucketKey(b))
     const byDay = Object.fromEntries(dayKeys.map((k) => [k, { date: k, critical: 0, warning: 0, info: 0 }]))
 
     let critical = 0, warning = 0, info = 0, open = 0, overdue = 0, resolved = 0, falseAlarm = 0
@@ -94,8 +96,8 @@ export async function GET(request: Request) {
 
       typeCounts.set(e.type, (typeCounts.get(e.type) ?? 0) + 1)
 
-      const dk = new Date(e.timestamp.getTime() + TZ_MS).toISOString().slice(0, 10)
-      if (byDay[dk]) byDay[dk][sev]++
+      const b = Math.floor((todayIdx - Math.floor((e.timestamp.getTime() + TZ_MS) / 86400_000)) / step)
+      if (b >= 0 && b < nBuckets) byDay[bucketKey(b)][sev]++
 
       // Время Алматы (UTC+5) — для тепловой карты «день недели × час»
       const local = new Date(e.timestamp.getTime() + TZ_MS)
@@ -120,6 +122,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       days,
+      step,
       totals: {
         total: events.length,
         demo: events.filter((e) => e.isDemo).length,
