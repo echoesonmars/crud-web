@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { MonitoringSearchForm } from "@/components/monitoring-search-form"
 import { Button } from "@/components/ui/button"
@@ -45,6 +45,11 @@ export default function ReportsPage() {
     }
   }
 
+  // Сразу показываем журнал за год, не дожидаясь поиска
+  useEffect(() => {
+    fetchEvents()
+  }, [])
+
   const handleSearch = (params: { query: string; type: string; date: Date | undefined }) => {
     fetchEvents(params)
   }
@@ -54,7 +59,7 @@ export default function ReportsPage() {
     if (events.length === 0) return
     const headers = ["Время", "Тип события", "Источник", "Подробности"]
     const rows = events.map(e => [
-      new Date(e.timestamp).toLocaleString("ru-RU"),
+      new Date(e.timestamp).toLocaleString("ru-RU", { timeZone: "Asia/Almaty" }),
       e.type,
       e.cameraName,
       e.details

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { MonitoringSearchForm } from "@/components/monitoring-search-form"
 import { StatusBadge } from "@/components/shared/status-badge"
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table"
 import { AlertCircle } from "lucide-react"
 import { SEVERITY_META, severityOf } from "@/lib/sectors"
+import { IncidentDialog } from "@/components/incident-dialog"
 
 interface AlarmEvent {
   id: string
@@ -26,6 +27,7 @@ interface AlarmEvent {
 export default function AlarmsPage() {
   const [events, setEvents] = useState<AlarmEvent[]>([])
   const [loading, setLoading] = useState(false)
+  const [selected, setSelected] = useState<string | null>(null)
 
   const fetchEvents = async (params?: { query: string; type: string; date: Date | undefined }) => {
     setLoading(true)
@@ -53,6 +55,11 @@ export default function AlarmsPage() {
       setLoading(false)
     }
   }
+
+  // Сразу показываем журнал за год, не дожидаясь поиска
+  useEffect(() => {
+    fetchEvents()
+  }, [])
 
   const handleSearch = (params: { query: string; type: string; date: Date | undefined }) => {
     fetchEvents(params)
@@ -103,7 +110,7 @@ export default function AlarmsPage() {
               </TableHeader>
               <TableBody>
                 {events.map((event) => (
-                  <TableRow key={event.id} className="hover:bg-secondary/15 border-b border-border/40">
+                  <TableRow key={event.id} onClick={() => setSelected(event.id)} className="cursor-pointer hover:bg-secondary/15 border-b border-border/40">
                     <TableCell className="font-mono text-xs text-foreground">
                       {new Date(event.timestamp).toLocaleString("ru-RU", {
                         day: "2-digit",
@@ -112,6 +119,7 @@ export default function AlarmsPage() {
                         hour: "2-digit",
                         minute: "2-digit",
                         second: "2-digit",
+                        timeZone: "Asia/Almaty",
                       })}
                     </TableCell>
                     <TableCell>
@@ -127,6 +135,8 @@ export default function AlarmsPage() {
           )}
         </div>
       </div>
+
+      <IncidentDialog incidentId={selected} onClose={() => setSelected(null)} onChanged={() => fetchEvents()} />
     </DashboardLayout>
   )
 }

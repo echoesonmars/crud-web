@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const session = await getSession(request)
     const { searchParams } = new URL(request.url)
     if (!searchParams.get("days") && !searchParams.get("date") && !searchParams.get("from")) {
-      searchParams.set("days", "30")
+      searchParams.set("days", "365")
     }
 
     const events = await db.alarmEvent.findMany({
